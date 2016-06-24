@@ -1,0 +1,50 @@
+.gameboard {
+  margin: auto;
+  position: relative;
+  background: #000000;
+}
+
+.block {
+  width: 20px;
+  height: 20px;
+  background: #1A1A1A;
+  border-radius: 4px;
+}
+
+.i {
+  background: #09AEF7;
+}
+
+.o {
+  background: #E39F02;
+}
+
+.t {
+  background: #892389;
+}
+
+.z {
+  background: #D95066;
+}
+
+.s {
+  background: #86EA33;
+}
+
+.l {
+  background: #E35B02;
+}
+
+.j {
+  background: #4464E9;
+}
+
+.storedpiece {
+  display: block;
+  position: absolute;
+  top: 30px;
+  left: 400px;
+  background: purple;
+  height: 100px;
+  width: 100px;
+}
