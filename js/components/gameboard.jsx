@@ -5,6 +5,7 @@ var GameStore = require('./../stores/game_store');
 var GameBoardActions = require('./../actions/gameboard_actions');
 var PieceStore = require('./../stores/piece_store');
 var BoardStore = require('./../stores/board_store');
+var PointsStore = require('./../stores/points_store');
 var PieceQueue = require('./../util/piece_queue_utils');
 
 var GameBoard = React.createClass({
@@ -28,7 +29,7 @@ var GameBoard = React.createClass({
 
   _onChange: function () {
     var gameBoard = GameStore.fetchGameBoard();
-    GameStore.updateGameBoard(gameBoard);
+    gameBoard = GameStore.updateGameBoard(gameBoard);
     this.setState( { currentBoardState : GameStore.fetchGameBoard() } )
   },
 

@@ -1,4 +1,4 @@
-title, span {
+title, span, ul, li {
   border: 0;
   outline: 0;
   margin: 0;
@@ -17,7 +17,7 @@ title, span {
   src: url('timeburnernormal.ttf');
 }
 
-body {
+html, body {
   font-family: TimeBurner;
 }
 
@@ -102,6 +102,7 @@ body {
   position: absolute;
   top: 0px;
   left: 375px;
+  color: #129AFF;
 }
 
 .storedpiece-title {
@@ -150,6 +151,7 @@ body {
   position: absolute;
   top: 0px;
   right: 400px;
+  color: #129AFF;
 }
 
 .nextpiece-title {
@@ -161,4 +163,21 @@ body {
 .nextpiece-table {
   display: block;
   background: #000000;
+}
+
+.scoreboard {
+  position: absolute;
+  top: 240px;
+  right: 375px;
+  font-size: 36px;
+  color: #129AFF;
+}
+
+.footer {
+  list-style: none;
+}
+
+.footer li {
+  text-align: center;
+  margin: 20px;
 }

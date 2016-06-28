@@ -7,7 +7,7 @@ var ScoreBoardActions = require('./../actions/score_board_actions');
 
 var GameStore = new Store(AppDispatcher);
 
-var _rowsCleared = 0,
+var _lines = 0,
     _points = 0;
 
 GameStore.__onDispatch = function () {
@@ -78,16 +78,8 @@ GameStore.clearRows = function (gameBoard) {
 GameStore.clearRow = function (gameBoard, idx) {
   gameBoard.splice(idx, 1);
   BoardStore.addGameBoardRowToTop(gameBoard);
-  ScoreBoardActions.addPoints(10);
-  ScoreBoardActions.addLine(1);
-};
-
-GameStore.fetchRowsCleared = function () {
-  return _rowsCleared;
-};
-
-GameStore.fetchPoints = function () {
-  return _points;
+  _lines += 1;
+  _points += 10;
 };
 
 GameStore.updateGameBoard = function (gameBoard) {
@@ -97,6 +89,7 @@ GameStore.updateGameBoard = function (gameBoard) {
     GameStore.lockPiece(gameBoard);
   }
   GameStore.clearRows(gameBoard);
+  return {points : _points, lines : _lines};
 };
 
 module.exports = GameStore;

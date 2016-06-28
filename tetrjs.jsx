@@ -7,6 +7,7 @@ var ScoreBoard = require('./js/components/score_board');
 var Instructions = require('./js/components/instructions');
 var Title = require('./js/components/title');
 var NextPiece = require('./js/components/next_piece');
+var Footer = require('./js/components/footer');
 
 var Tetrjs = React.createClass({
 
@@ -20,7 +21,9 @@ var Tetrjs = React.createClass({
         <StoredPiece/>
         <GameBoard/>
         <NextPiece/>
+        <ScoreBoard/>
         </section>
+        <Footer/>
       </div>
     )
 

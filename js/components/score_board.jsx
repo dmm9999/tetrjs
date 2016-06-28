@@ -20,15 +20,20 @@ var ScoreBoard = React.createClass({
   },
 
   _onChange: function () {
-    this.setState( { lines : PointsStore.fetchLines(), points : PointsStore.fetchPoints() } );
+    var gameBoard = GameStore.fetchGameBoard();
+    gameBoard = GameStore.updateGameBoard(gameBoard);
+    this.setState( { lines : gameBoard.lines, points : gameBoard.points } );
   },
 
   render: function () {
 
+    var lines = "Lines: " + this.state.lines;
+    var points = "Points: " + this.state.points;
+
     return (
       <div className="scoreboard">
-        <div className="lines">{this.state.lines}</div><br/>
-        <div className="points">{this.state.points}</div>
+        <div className="lines">{lines}</div><br/>
+        <div className="points">{points}</div>
       </div>
     )
 

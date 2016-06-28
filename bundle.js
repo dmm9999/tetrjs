@@ -53,6 +53,7 @@
 	var Instructions = __webpack_require__(202);
 	var Title = __webpack_require__(203);
 	var NextPiece = __webpack_require__(204);
+	var Footer = __webpack_require__(205);
 	
 	var Tetrjs = React.createClass({
 	  displayName: 'Tetrjs',
@@ -70,8 +71,10 @@
 	        React.createElement(Instructions, null),
 	        React.createElement(StoredPiece, null),
 	        React.createElement(GameBoard, null),
-	        React.createElement(NextPiece, null)
-	      )
+	        React.createElement(NextPiece, null),
+	        React.createElement(ScoreBoard, null)
+	      ),
+	      React.createElement(Footer, null)
 	    );
 	  }
 	
@@ -20383,6 +20386,7 @@
 	var GameBoardActions = __webpack_require__(198);
 	var PieceStore = __webpack_require__(193);
 	var BoardStore = __webpack_require__(192);
+	var PointsStore = __webpack_require__(201);
 	var PieceQueue = __webpack_require__(194);
 	
 	var GameBoard = React.createClass({
@@ -20408,7 +20412,7 @@
 	
 	  _onChange: function () {
 	    var gameBoard = GameStore.fetchGameBoard();
-	    GameStore.updateGameBoard(gameBoard);
+	    gameBoard = GameStore.updateGameBoard(gameBoard);
 	    this.setState({ currentBoardState: GameStore.fetchGameBoard() });
 	  },
 	
@@ -20513,7 +20517,7 @@
 	
 	var GameStore = new Store(AppDispatcher);
 	
-	var _rowsCleared = 0,
+	var _lines = 0,
 	    _points = 0;
 	
 	GameStore.__onDispatch = function () {};
@@ -20582,16 +20586,8 @@
 	GameStore.clearRow = function (gameBoard, idx) {
 	  gameBoard.splice(idx, 1);
 	  BoardStore.addGameBoardRowToTop(gameBoard);
-	  ScoreBoardActions.addPoints(10);
-	  ScoreBoardActions.addLine(1);
-	};
-	
-	GameStore.fetchRowsCleared = function () {
-	  return _rowsCleared;
-	};
-	
-	GameStore.fetchPoints = function () {
-	  return _points;
+	  _lines += 1;
+	  _points += 10;
 	};
 	
 	GameStore.updateGameBoard = function (gameBoard) {
@@ -20601,6 +20597,7 @@
 	    GameStore.lockPiece(gameBoard);
 	  }
 	  GameStore.clearRows(gameBoard);
+	  return { points: _points, lines: _lines };
 	};
 	
 	module.exports = GameStore;
@@ -27966,10 +27963,15 @@
 	  },
 	
 	  _onChange: function () {
-	    this.setState({ lines: PointsStore.fetchLines(), points: PointsStore.fetchPoints() });
+	    var gameBoard = GameStore.fetchGameBoard();
+	    gameBoard = GameStore.updateGameBoard(gameBoard);
+	    this.setState({ lines: gameBoard.lines, points: gameBoard.points });
 	  },
 	
 	  render: function () {
+	
+	    var lines = "Lines: " + this.state.lines;
+	    var points = "Points: " + this.state.points;
 	
 	    return React.createElement(
 	      'div',
@@ -27977,13 +27979,13 @@
 	      React.createElement(
 	        'div',
 	        { className: 'lines' },
-	        this.state.lines
+	        lines
 	      ),
 	      React.createElement('br', null),
 	      React.createElement(
 	        'div',
 	        { className: 'points' },
-	        this.state.points
+	        points
 	      )
 	    );
 	  }
@@ -28283,6 +28285,55 @@
 	});
 	
 	module.exports = NextPiece;
+
+/***/ },
+/* 205 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var Footer = React.createClass({
+	  displayName: "Footer",
+	
+	
+	  render: function () {
+	
+	    return React.createElement(
+	      "ul",
+	      { className: "footer" },
+	      React.createElement(
+	        "li",
+	        null,
+	        React.createElement(
+	          "a",
+	          { href: "http://www.davidmcilroy.io" },
+	          "Portfolio"
+	        )
+	      ),
+	      React.createElement(
+	        "li",
+	        null,
+	        React.createElement(
+	          "a",
+	          { href: "https://www.linkedin.com/in/mcilroydavid" },
+	          "LinkedIn"
+	        )
+	      ),
+	      React.createElement(
+	        "li",
+	        null,
+	        React.createElement(
+	          "a",
+	          { href: "https://www.github.com/dmm9999" },
+	          "Github"
+	        )
+	      )
+	    );
+	  }
+	
+	});
+	
+	module.exports = Footer;
 
 /***/ }
 /******/ ]);
