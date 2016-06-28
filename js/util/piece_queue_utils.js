@@ -5,7 +5,7 @@ var _pieceQueue = [];
 var pieceQueue = {
 
   createPieceArray : function () {
-    for (var i = 0; i < 5; i++) {
+    for (var i = 0; i < 2; i++) {
       for (var j in Pieces) {
         _pieceQueue.push(Pieces[j]);
       }

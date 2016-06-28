@@ -48,8 +48,11 @@
 	var ReactDOM = __webpack_require__(38);
 	
 	var GameBoard = __webpack_require__(168);
-	var StoredPiece = __webpack_require__(197);
-	var ScoreBoard = __webpack_require__(198);
+	var StoredPiece = __webpack_require__(199);
+	var ScoreBoard = __webpack_require__(200);
+	var Instructions = __webpack_require__(202);
+	var Title = __webpack_require__(203);
+	var NextPiece = __webpack_require__(204);
 	
 	var Tetrjs = React.createClass({
 	  displayName: 'Tetrjs',
@@ -59,10 +62,16 @@
 	
 	    return React.createElement(
 	      'div',
-	      null,
-	      React.createElement(GameBoard, null),
-	      React.createElement(StoredPiece, null),
-	      React.createElement(ScoreBoard, null)
+	      { className: 'tetrjs' },
+	      React.createElement(Title, null),
+	      React.createElement(
+	        'section',
+	        { className: 'content group' },
+	        React.createElement(Instructions, null),
+	        React.createElement(StoredPiece, null),
+	        React.createElement(GameBoard, null),
+	        React.createElement(NextPiece, null)
+	      )
 	    );
 	  }
 	
@@ -20371,7 +20380,7 @@
 	
 	var GameBoardConstants = __webpack_require__(169);
 	var GameStore = __webpack_require__(170);
-	var GameBoardActions = __webpack_require__(196);
+	var GameBoardActions = __webpack_require__(198);
 	var PieceStore = __webpack_require__(193);
 	var BoardStore = __webpack_require__(192);
 	var PieceQueue = __webpack_require__(194);
@@ -20500,7 +20509,7 @@
 	var BoardStore = __webpack_require__(192);
 	var PieceStore = __webpack_require__(193);
 	var Pieces = __webpack_require__(195);
-	var ScoreBoardActions = __webpack_require__(201);
+	var ScoreBoardActions = __webpack_require__(196);
 	
 	var GameStore = new Store(AppDispatcher);
 	
@@ -20573,8 +20582,8 @@
 	GameStore.clearRow = function (gameBoard, idx) {
 	  gameBoard.splice(idx, 1);
 	  BoardStore.addGameBoardRowToTop(gameBoard);
-	  ScoreBoardActions.addLines(1);
 	  ScoreBoardActions.addPoints(10);
+	  ScoreBoardActions.addLine(1);
 	};
 	
 	GameStore.fetchRowsCleared = function () {
@@ -27385,7 +27394,6 @@
 	
 	_createGameBoardRow = function () {
 	  var gameBoardRow = Array(GameBoardConstants.GAMEBOARD_WIDTH);
-	  console.log('row created');
 	  for (var i = 0; i < 10; i++) {
 	    gameBoardRow[i] = { empty: true, type: "", locked: false };
 	  }
@@ -27396,12 +27404,10 @@
 	
 	BoardStore.addGameBoardRowToTop = function (gameBoard) {
 	  gameBoard.unshift(_createGameBoardRow());
-	  console.log('replacement row added');
 	};
 	
 	_createGameBoardLockedRow = function () {
 	  var gameBoardLockedRow = Array(GameBoardConstants.GAMEBOARD_WIDTH);
-	  console.log('locked row created');
 	  for (var i = 0; i < 12; i++) {
 	    gameBoardLockedRow[i] = { empty: true, type: "", locked: true };
 	  }
@@ -27414,10 +27420,8 @@
 	  for (var i = 0; i < piece[orientation].length; i++) {
 	    for (var j = 0; j < piece[orientation][i].length; j++) {
 	      if (piece[orientation][i][j] && !!_gameBoard[position[0] + i][position[1] + j] && _gameBoard[position[0] + i][position[1] + j].locked) {
-	        console.log('invalid 1');
 	        return false;
 	      } else if (piece[orientation][i][j] && !!_gameBoard[position[0] + i][position[1] + j] && _gameBoard[position[0] + i][position[1] + j].locked) {
-	        console.log('invalid 3');
 	        return false;
 	      }
 	    }
@@ -27480,9 +27484,48 @@
 	
 	var PieceStore = new Store(AppDispatcher);
 	
-	var _piece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
+	var _piece, _nextPiece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
 	
 	var _initialPosition = [0, 1];
+	
+	// PieceStore.__onDispatch = function (payload) {
+	//   switch (payload.actionType) {
+	//     case "MOVE_LEFT":
+	//       _moveLeft();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "MOVE_RIGHT":
+	//       _moveRight();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "MOVE_DOWN":
+	//       _moveDown();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "HARD_DROP":
+	//       _hardDrop();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "ROTATE":
+	//       _rotate();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "STORE_PIECE":
+	//       _storePiece();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "TOGGLE_PAUSE":
+	//       _togglePause();
+	//       PieceStore.__emitChange();
+	//       break;
+	//   }
+	// };
+	
+	_dispatchToken = PieceStore.getDispatchToken();
+	
+	PieceStore.fetchDispatchToken = function () {
+	  return _dispatchToken;
+	};
 	
 	PieceStore.__onDispatch = function (payload) {
 	  switch (payload.actionType) {
@@ -27525,6 +27568,13 @@
 	  };
 	};
 	
+	PieceStore.nextPiece = function () {
+	  if (PieceQueue.returnPieceQueue().length === 0) {
+	    PieceQueue.createPieceArray();
+	  }
+	  _nextPiece = PieceQueue.getPiece();
+	};
+	
 	PieceStore.newPiece = function (piece) {
 	
 	  if (piece) {
@@ -27532,18 +27582,15 @@
 	    _currentPosition = _initialPosition;
 	    _orientation = 0;
 	  } else {
-	    if (PieceQueue.returnPieceQueue().length === 0) {
-	      PieceQueue.createPieceArray();
-	    }
-	
-	    _piece = PieceQueue.getPiece();
+	    _piece = _nextPiece;
 	    _currentPosition = _initialPosition;
 	    _orientation = 0;
-	
-	    if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
-	      console.log("Game over!");
-	    }
 	  }
+	  if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
+	    console.log("Game over!");
+	  }
+	
+	  PieceStore.nextPiece();
 	};
 	
 	_moveLeft = function () {
@@ -27601,6 +27648,11 @@
 	  return _stored;
 	};
 	
+	PieceStore.fetchNextPiece = function () {
+	  return _nextPiece;
+	};
+	
+	PieceStore.nextPiece();
 	PieceStore.newPiece();
 	
 	module.exports = PieceStore;
@@ -27616,7 +27668,7 @@
 	var pieceQueue = {
 	
 	  createPieceArray: function () {
-	    for (var i = 0; i < 5; i++) {
+	    for (var i = 0; i < 2; i++) {
 	      for (var j in Pieces) {
 	        _pieceQueue.push(Pieces[j]);
 	      }
@@ -27708,6 +27760,42 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var AppDispatcher = __webpack_require__(189);
+	var ScoreBoardConstants = __webpack_require__(197);
+	
+	var ScoreBoardActions = {
+	  addPoints: function (points) {
+	    AppDispatcher.dispatch({
+	      actionType: ScoreBoardConstants.ADD_POINTS,
+	      points: points
+	    });
+	  },
+	
+	  addLines: function (lines) {
+	    AppDispatcher.dispatch({
+	      actionType: ScoreBoardConstants.ADD_LINES,
+	      lines: lines
+	    });
+	  }
+	};
+	
+	module.exports = ScoreBoardActions;
+
+/***/ },
+/* 197 */
+/***/ function(module, exports) {
+
+	var ScoreBoardConstants = {
+	  ADD_POINTS: "ADD_POINTS",
+	  ADD_LINES: "ADD_LINES"
+	};
+	
+	module.exports = ScoreBoardConstants;
+
+/***/ },
+/* 198 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var AppDispatcher = __webpack_require__(189);
 	var GameBoardConstants = __webpack_require__(169);
 	
 	var GameBoardActions = {
@@ -27759,7 +27847,7 @@
 	module.exports = GameBoardActions;
 
 /***/ },
-/* 197 */
+/* 199 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -27827,12 +27915,21 @@
 	    }
 	
 	    return React.createElement(
-	      'table',
+	      'div',
 	      { className: 'storedpiece' },
 	      React.createElement(
-	        'tbody',
-	        null,
-	        rows
+	        'title',
+	        { className: 'storedpiece-title' },
+	        'Stored Piece'
+	      ),
+	      React.createElement(
+	        'table',
+	        { className: 'storedpiece-table' },
+	        React.createElement(
+	          'tbody',
+	          null,
+	          rows
+	        )
 	      )
 	    );
 	  }
@@ -27842,7 +27939,7 @@
 	module.exports = StoredPiece;
 
 /***/ },
-/* 198 */
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -27850,7 +27947,7 @@
 	var GameStore = __webpack_require__(170);
 	var BoardStore = __webpack_require__(192);
 	var PieceStore = __webpack_require__(193);
-	var PointsStore = __webpack_require__(199);
+	var PointsStore = __webpack_require__(201);
 	
 	var ScoreBoard = React.createClass({
 	  displayName: 'ScoreBoard',
@@ -27896,12 +27993,12 @@
 	module.exports = ScoreBoard;
 
 /***/ },
-/* 199 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Store = __webpack_require__(171).Store;
 	var AppDispatcher = __webpack_require__(189);
-	var ScoreBoardConstants = __webpack_require__(200);
+	var ScoreBoardConstants = __webpack_require__(197);
 	
 	var PointsStore = new Store(AppDispatcher);
 	
@@ -27940,40 +28037,252 @@
 	module.exports = PointsStore;
 
 /***/ },
-/* 200 */
-/***/ function(module, exports) {
-
-	var ScoreBoardConstants = {
-	  ADD_POINTS: "ADD_POINTS",
-	  ADD_LINES: "ADD_LINES"
-	};
-	
-	module.exports = ScoreBoardConstants;
-
-/***/ },
-/* 201 */
+/* 202 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var AppDispatcher = __webpack_require__(189);
-	var ScoreBoardConstants = __webpack_require__(200);
+	var React = __webpack_require__(1);
 	
-	var ScoreBoardActions = {
-	  addPoints: function (points) {
-	    AppDispatcher.dispatch({
-	      actionType: ScoreBoardConstants.ADD_POINTS,
-	      points: points
-	    });
+	var Instructions = React.createClass({
+	  displayName: "Instructions",
+	
+	
+	  render: function () {
+	
+	    return React.createElement(
+	      "div",
+	      { className: "instructions" },
+	      React.createElement(
+	        "title",
+	        { className: "instructions-title" },
+	        "How To Play"
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key" },
+	          "←"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Move Piece Left"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key" },
+	          "→"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Move Piece Right"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key" },
+	          "↓"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Move Piece Down"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key" },
+	          "↑"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Rotate Piece"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key space" },
+	          "SPACE"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Drop Piece"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key shift" },
+	          "SHIFT"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Store Piece"
+	        )
+	      ),
+	      React.createElement("br", null),
+	      React.createElement(
+	        "span",
+	        { className: "instruction-line group" },
+	        React.createElement(
+	          "span",
+	          { className: "key" },
+	          "P"
+	        ),
+	        React.createElement(
+	          "span",
+	          { className: "text" },
+	          "Pause Game"
+	        )
+	      ),
+	      React.createElement("br", null)
+	    );
+	  }
+	
+	});
+	
+	module.exports = Instructions;
+
+/***/ },
+/* 203 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var Title = React.createClass({
+	  displayName: "Title",
+	
+	
+	  render: function () {
+	
+	    return React.createElement(
+	      "div",
+	      { className: "title" },
+	      "Tetrjs"
+	    );
+	  }
+	
+	});
+	
+	module.exports = Title;
+
+/***/ },
+/* 204 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var PieceStore = __webpack_require__(193);
+	var BoardStore = __webpack_require__(192);
+	
+	var NextPiece = React.createClass({
+	  displayName: 'NextPiece',
+	
+	
+	  getInitialState: function () {
+	    return { piece: PieceStore.fetchNextPiece(), grid: BoardStore.createStoredPieceGrid() };
 	  },
 	
-	  addLines: function (lines) {
-	    AppDispatcher.dispatch({
-	      actionType: ScoreBoardConstants.ADD_LINES,
-	      lines: lines
-	    });
-	  }
-	};
+	  componentDidMount: function () {
+	    this.listener = PieceStore.addListener(this._onChange);
+	  },
 	
-	module.exports = ScoreBoardActions;
+	  componentWillUnmount: function () {
+	    this.listener.remove();
+	  },
+	
+	  _onChange: function () {
+	    this.setState({ piece: PieceStore.fetchNextPiece() });
+	  },
+	
+	  render: function () {
+	
+	    var piece = this.state.piece;
+	    var grid = this.state.grid;
+	
+	    var rows, row;
+	
+	    if (piece) {
+	      rows = piece[0].map(function (row, rowIndex) {
+	
+	        row = row.map(function (el, elIndex) {
+	          if (!el) {
+	            var className = "block";
+	          } else {
+	            var className = "block" + " " + piece.type;
+	          }
+	          return React.createElement('td', { key: elIndex, className: className });
+	        });
+	        return React.createElement(
+	          'tr',
+	          { key: rowIndex },
+	          row
+	        );
+	      });
+	    } else {
+	      rows = [0, 1, 2, 3].map(function (row, rowIndex) {
+	
+	        row = [0, 1, 2, 3].map(function (el, elIndex) {
+	
+	          return React.createElement('td', { key: elIndex, className: 'block' });
+	        });
+	        return React.createElement(
+	          'tr',
+	          { key: rowIndex },
+	          row
+	        );
+	      });
+	    }
+	
+	    return React.createElement(
+	      'div',
+	      { className: 'nextpiece' },
+	      React.createElement(
+	        'title',
+	        { className: 'nextpiece-title' },
+	        'Next Piece'
+	      ),
+	      React.createElement(
+	        'table',
+	        { className: 'nextpiece-table' },
+	        React.createElement(
+	          'tbody',
+	          null,
+	          rows
+	        )
+	      )
+	    );
+	  }
+	
+	});
+	
+	module.exports = NextPiece;
 
 /***/ }
 /******/ ]);

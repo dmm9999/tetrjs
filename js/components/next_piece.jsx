@@ -3,10 +3,10 @@ var React = require('react');
 var PieceStore = require('./../stores/piece_store');
 var BoardStore = require('./../stores/board_store');
 
-var StoredPiece = React.createClass({
+var NextPiece = React.createClass({
 
     getInitialState: function () {
-      return ( { piece : PieceStore.fetchStoredPiece(), grid : BoardStore.createStoredPieceGrid() } );
+      return ( { piece : PieceStore.fetchNextPiece(), grid : BoardStore.createStoredPieceGrid() } );
     },
 
     componentDidMount: function () {
@@ -18,7 +18,7 @@ var StoredPiece = React.createClass({
     },
 
     _onChange: function () {
-      this.setState( { piece : PieceStore.fetchStoredPiece() } );
+      this.setState( { piece : PieceStore.fetchNextPiece() } );
     },
 
     render: function () {
@@ -57,9 +57,9 @@ var StoredPiece = React.createClass({
       }
 
     return (
-      <div className="storedpiece">
-        <title className="storedpiece-title">Stored Piece</title>
-        <table className="storedpiece-table">
+      <div className="nextpiece">
+        <title className="nextpiece-title">Next Piece</title>
+        <table className="nextpiece-table">
         <tbody>
         {rows}
         </tbody>
@@ -71,4 +71,4 @@ var StoredPiece = React.createClass({
 
 });
 
-module.exports = StoredPiece;
+module.exports = NextPiece;

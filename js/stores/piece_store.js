@@ -6,9 +6,48 @@ var BoardStore = require('./board_store');
 
 var PieceStore = new Store(AppDispatcher);
 
-var _piece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
+var _piece, _nextPiece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
 
 var _initialPosition = [0,1];
+
+// PieceStore.__onDispatch = function (payload) {
+//   switch (payload.actionType) {
+//     case "MOVE_LEFT":
+//       _moveLeft();
+//       PieceStore.__emitChange();
+//       break;
+//     case "MOVE_RIGHT":
+//       _moveRight();
+//       PieceStore.__emitChange();
+//       break;
+//     case "MOVE_DOWN":
+//       _moveDown();
+//       PieceStore.__emitChange();
+//       break;
+//     case "HARD_DROP":
+//       _hardDrop();
+//       PieceStore.__emitChange();
+//       break;
+//     case "ROTATE":
+//       _rotate();
+//       PieceStore.__emitChange();
+//       break;
+//     case "STORE_PIECE":
+//       _storePiece();
+//       PieceStore.__emitChange();
+//       break;
+//     case "TOGGLE_PAUSE":
+//       _togglePause();
+//       PieceStore.__emitChange();
+//       break;
+//   }
+// };
+
+_dispatchToken = PieceStore.getDispatchToken();
+
+PieceStore.fetchDispatchToken = function () {
+  return _dispatchToken;
+};
 
 PieceStore.__onDispatch = function (payload) {
   switch (payload.actionType) {
@@ -51,6 +90,13 @@ PieceStore.fetchCurrentPiece = function () {
   };
 };
 
+PieceStore.nextPiece = function () {
+  if (PieceQueue.returnPieceQueue().length === 0) {
+    PieceQueue.createPieceArray();
+  }
+  _nextPiece = PieceQueue.getPiece();
+};
+
 PieceStore.newPiece = function (piece) {
 
   if (piece) {
@@ -58,18 +104,15 @@ PieceStore.newPiece = function (piece) {
     _currentPosition = _initialPosition;
     _orientation = 0;
   } else {
-    if (PieceQueue.returnPieceQueue().length === 0) {
-      PieceQueue.createPieceArray();
-    }
-
-    _piece = PieceQueue.getPiece();
+    _piece = _nextPiece;
     _currentPosition = _initialPosition;
     _orientation = 0;
-
+  }
     if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
       console.log("Game over!");
-    }
   }
+
+  PieceStore.nextPiece();
 };
 
 _moveLeft = function () {
@@ -127,6 +170,11 @@ PieceStore.fetchStoredPiece = function () {
   return _stored;
 };
 
+PieceStore.fetchNextPiece = function () {
+  return _nextPiece;
+};
+
+PieceStore.nextPiece();
 PieceStore.newPiece();
 
 module.exports = PieceStore;

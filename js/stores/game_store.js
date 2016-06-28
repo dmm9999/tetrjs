@@ -78,8 +78,8 @@ GameStore.clearRows = function (gameBoard) {
 GameStore.clearRow = function (gameBoard, idx) {
   gameBoard.splice(idx, 1);
   BoardStore.addGameBoardRowToTop(gameBoard);
-  ScoreBoardActions.addLines(1);
   ScoreBoardActions.addPoints(10);
+  ScoreBoardActions.addLine(1);
 };
 
 GameStore.fetchRowsCleared = function () {

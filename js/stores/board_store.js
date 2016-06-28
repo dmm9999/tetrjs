@@ -22,7 +22,6 @@ BoardStore.createGameBoard = function () {
 
 _createGameBoardRow = function () {
   var gameBoardRow = Array(GameBoardConstants.GAMEBOARD_WIDTH);
-  console.log('row created');
   for (var i = 0; i < 10; i++) {
     gameBoardRow[i] = {empty: true, type: "", locked: false};
   }
@@ -33,12 +32,10 @@ _createGameBoardRow = function () {
 
 BoardStore.addGameBoardRowToTop = function (gameBoard) {
   gameBoard.unshift(_createGameBoardRow());
-  console.log('replacement row added');
 };
 
 _createGameBoardLockedRow = function () {
   var gameBoardLockedRow = Array(GameBoardConstants.GAMEBOARD_WIDTH);
-  console.log('locked row created');
   for (var i = 0; i < 12; i++) {
     gameBoardLockedRow[i] = {empty: true, type: "", locked: true};
   }
@@ -53,12 +50,10 @@ BoardStore.validPosition = function (piece, position, orientation) {
       if (piece[orientation][i][j] &&
           !!_gameBoard[position[0] + i][position[1] + j] &&
           _gameBoard[position[0] + i][position[1] + j].locked) {
-            console.log('invalid 1');
             return false;
       } else if (piece[orientation][i][j] &&
                 !!_gameBoard[position[0] + i][position[1] + j] &&
                 _gameBoard[position[0] + i][position[1] + j].locked) {
-                  console.log('invalid 3');
             return false;
       }
     }
