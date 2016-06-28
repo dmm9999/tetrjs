@@ -9,12 +9,12 @@ title, span {
 
 @font-face{
     font-family: Tetris;
-    src: local('Tetris2.TTF');
+    src: url('Tetris2.ttf');
 }
 
 @font-face{
   font-family: TimeBurner;
-  src: local('timeburnernormal.ttf');
+  src: url('timeburnernormal.ttf');
 }
 
 body {
