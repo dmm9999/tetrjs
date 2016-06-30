@@ -48,12 +48,12 @@
 	var ReactDOM = __webpack_require__(38);
 	
 	var GameBoard = __webpack_require__(168);
-	var StoredPiece = __webpack_require__(200);
-	var ScoreBoard = __webpack_require__(201);
-	var Instructions = __webpack_require__(202);
-	var Title = __webpack_require__(203);
-	var NextPiece = __webpack_require__(204);
-	var Footer = __webpack_require__(205);
+	var StoredPiece = __webpack_require__(169);
+	var ScoreBoard = __webpack_require__(196);
+	var Instructions = __webpack_require__(201);
+	var Title = __webpack_require__(202);
+	var NextPiece = __webpack_require__(203);
+	var Footer = __webpack_require__(204);
 	
 	var Tetrjs = React.createClass({
 	  displayName: 'Tetrjs',
@@ -20381,20 +20381,22 @@
 
 	var React = __webpack_require__(1);
 	
-	var GameBoardConstants = __webpack_require__(169);
-	var GameStore = __webpack_require__(170);
-	var GameBoardActions = __webpack_require__(198);
-	var PieceStore = __webpack_require__(193);
-	var BoardStore = __webpack_require__(192);
-	var PointsStore = __webpack_require__(199);
-	var PieceQueue = __webpack_require__(194);
+	var GameBoardConstants = __webpack_require__(195);
+	var GameStore = __webpack_require__(197);
+	var GameBoardActions = __webpack_require__(205);
+	var PieceStore = __webpack_require__(170);
+	var BoardStore = __webpack_require__(194);
+	var PointsStore = __webpack_require__(200);
+	var PieceQueue = __webpack_require__(192);
+	var PausedModal = __webpack_require__(206);
+	var GameOverModal = __webpack_require__(207);
 	
 	var GameBoard = React.createClass({
 	  displayName: 'GameBoard',
 	
 	
 	  getInitialState: function () {
-	    return { currentBoardState: GameStore.fetchGameBoard(), paused: true };
+	    return { currentBoardState: GameStore.fetchGameBoard(), paused: true, gameOver: false };
 	  },
 	
 	  componentDidMount: function () {
@@ -20465,6 +20467,10 @@
 	    }
 	  },
 	
+	  gameOver: function () {
+	    this.setState({ gameOver: true });
+	  },
+	
 	  render: function () {
 	
 	    var rows = this.state.currentBoardState.map(function (row, i) {
@@ -20488,15 +20494,47 @@
 	      );
 	    });
 	
-	    return React.createElement(
-	      'table',
-	      { className: 'gameboard' },
-	      React.createElement(
-	        'tbody',
+	    if (this.state.gameOver) {
+	      return React.createElement(
+	        'div',
 	        null,
-	        rows
-	      )
-	    );
+	        React.createElement(
+	          'table',
+	          { className: 'gameboard' },
+	          React.createElement(
+	            'tbody',
+	            null,
+	            rows
+	          )
+	        ),
+	        React.createElement(GameOverModal, null)
+	      );
+	    } else if (this.state.paused) {
+	      return React.createElement(
+	        'div',
+	        null,
+	        React.createElement(
+	          'table',
+	          { className: 'gameboard' },
+	          React.createElement(
+	            'tbody',
+	            null,
+	            rows
+	          )
+	        ),
+	        React.createElement(PausedModal, null)
+	      );
+	    } else {
+	      return React.createElement(
+	        'table',
+	        { className: 'gameboard' },
+	        React.createElement(
+	          'tbody',
+	          null,
+	          rows
+	        )
+	      );
+	    }
 	  }
 	
 	});
@@ -20505,26 +20543,95 @@
 
 /***/ },
 /* 169 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	var GameBoardConstants = {
+	var React = __webpack_require__(1);
 	
-	  moves: {
-	    MOVE_LEFT: "MOVE_LEFT",
-	    MOVE_RIGHT: "MOVE_RIGHT",
-	    MOVE_DOWN: "MOVE_DOWN",
-	    ROTATE: "ROTATE",
-	    HARD_DROP: "HARD_DROP",
-	    STORE_PIECE: "STORE_PIECE",
-	    TOGGLE_PAUSE: "TOGGLE_PAUSE"
+	var PieceStore = __webpack_require__(170);
+	var BoardStore = __webpack_require__(194);
+	
+	var StoredPiece = React.createClass({
+	  displayName: 'StoredPiece',
+	
+	
+	  getInitialState: function () {
+	    return { piece: PieceStore.fetchStoredPiece(), grid: BoardStore.createStoredPieceGrid() };
 	  },
 	
-	  GAMEBOARD_HEIGHT: 20,
-	  GAMEBOARD_WIDTH: 10
+	  componentDidMount: function () {
+	    this.listener = PieceStore.addListener(this._onChange);
+	  },
 	
-	};
+	  componentWillUnmount: function () {
+	    this.listener.remove();
+	  },
 	
-	module.exports = GameBoardConstants;
+	  _onChange: function () {
+	    this.setState({ piece: PieceStore.fetchStoredPiece() });
+	  },
+	
+	  render: function () {
+	
+	    var piece = this.state.piece;
+	    var grid = this.state.grid;
+	
+	    var rows, row;
+	
+	    if (piece) {
+	      rows = piece[0].map(function (row, rowIndex) {
+	
+	        row = row.map(function (el, elIndex) {
+	          if (!el) {
+	            var className = "block";
+	          } else {
+	            var className = "block" + " " + piece.type;
+	          }
+	          return React.createElement('td', { key: elIndex, className: className });
+	        });
+	        return React.createElement(
+	          'tr',
+	          { key: rowIndex },
+	          row
+	        );
+	      });
+	    } else {
+	      rows = [0, 1, 2, 3].map(function (row, rowIndex) {
+	
+	        row = [0, 1, 2, 3].map(function (el, elIndex) {
+	
+	          return React.createElement('td', { key: elIndex, className: 'block' });
+	        });
+	        return React.createElement(
+	          'tr',
+	          { key: rowIndex },
+	          row
+	        );
+	      });
+	    }
+	
+	    return React.createElement(
+	      'div',
+	      { className: 'storedpiece' },
+	      React.createElement(
+	        'title',
+	        { className: 'storedpiece-title' },
+	        'Stored Piece'
+	      ),
+	      React.createElement(
+	        'table',
+	        { className: 'storedpiece-table' },
+	        React.createElement(
+	          'tbody',
+	          null,
+	          rows
+	        )
+	      )
+	    );
+	  }
+	
+	});
+	
+	module.exports = StoredPiece;
 
 /***/ },
 /* 170 */
@@ -20532,97 +20639,182 @@
 
 	var Store = __webpack_require__(171).Store;
 	var AppDispatcher = __webpack_require__(189);
-	var BoardStore = __webpack_require__(192);
-	var PieceStore = __webpack_require__(193);
-	var Pieces = __webpack_require__(195);
-	var ScoreBoardActions = __webpack_require__(196);
 	
-	var GameStore = new Store(AppDispatcher);
+	var PieceQueue = __webpack_require__(192);
+	var BoardStore = __webpack_require__(194);
+	var GameBoard = __webpack_require__(168);
 	
-	var _lines = 0,
-	    _points = 0;
+	var PieceStore = new Store(AppDispatcher);
 	
-	GameStore.__onDispatch = function () {};
+	var _piece, _nextPiece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
 	
-	GameStore.fetchGameBoard = function () {
-	  return BoardStore.fetchGameBoard();
+	var _initialPosition = [0, 1];
+	
+	// PieceStore.__onDispatch = function (payload) {
+	//   switch (payload.actionType) {
+	//     case "MOVE_LEFT":
+	//       _moveLeft();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "MOVE_RIGHT":
+	//       _moveRight();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "MOVE_DOWN":
+	//       _moveDown();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "HARD_DROP":
+	//       _hardDrop();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "ROTATE":
+	//       _rotate();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "STORE_PIECE":
+	//       _storePiece();
+	//       PieceStore.__emitChange();
+	//       break;
+	//     case "TOGGLE_PAUSE":
+	//       _togglePause();
+	//       PieceStore.__emitChange();
+	//       break;
+	//   }
+	// };
+	
+	_dispatchToken = PieceStore.getDispatchToken();
+	
+	PieceStore.fetchDispatchToken = function () {
+	  return _dispatchToken;
 	};
 	
-	GameStore.wipeGameBoard = function (gameBoard) {
-	  gameBoard.forEach(function (row, rowIndex) {
-	    row.forEach(function (el, elIndex) {
-	      if (!!el.type && !el.locked) {
-	        el.type = "";
-	        el.empty = true;
-	      }
-	    });
-	  });
-	};
-	
-	GameStore.paintGameBoard = function (gameBoard) {
-	  currentPiece = PieceStore.fetchCurrentPiece();
-	  currentPosition = currentPiece.currentPosition;
-	  orientation = currentPiece.orientation;
-	  piece = currentPiece.piece[orientation];
-	  piece.forEach(function (row, rowIndex) {
-	    row.forEach(function (el, elIndex) {
-	      if (el && gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex]) {
-	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].type = currentPiece.piece.type;
-	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].empty = false;
-	      }
-	    });
-	  });
-	};
-	
-	GameStore.lockPiece = function (gameBoard) {
-	  currentPiece = PieceStore.fetchCurrentPiece();
-	  currentPosition = currentPiece.currentPosition;
-	  orientation = currentPiece.orientation;
-	  piece = currentPiece.piece[orientation];
-	  piece.forEach(function (row, rowIndex) {
-	    row.forEach(function (el, elIndex) {
-	      if (el && gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex]) {
-	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].locked = true;
-	      }
-	    });
-	  });
-	  PieceStore.newPiece();
-	};
-	
-	GameStore.fullRow = function (row) {
-	  if (row) {
-	    return row.slice(1, 11).every(function (el) {
-	      return el.locked && !!el.type;
-	    });
+	PieceStore.__onDispatch = function (payload) {
+	  switch (payload.actionType) {
+	    case "MOVE_LEFT":
+	      _moveLeft();
+	      PieceStore.__emitChange();
+	      break;
+	    case "MOVE_RIGHT":
+	      _moveRight();
+	      PieceStore.__emitChange();
+	      break;
+	    case "MOVE_DOWN":
+	      _moveDown();
+	      PieceStore.__emitChange();
+	      break;
+	    case "HARD_DROP":
+	      _hardDrop();
+	      PieceStore.__emitChange();
+	      break;
+	    case "ROTATE":
+	      _rotate();
+	      PieceStore.__emitChange();
+	      break;
+	    case "STORE_PIECE":
+	      _storePiece();
+	      PieceStore.__emitChange();
+	      break;
 	  }
 	};
 	
-	GameStore.clearRows = function (gameBoard) {
-	  for (var i = 0; i < gameBoard.length; i++) {
-	    if (GameStore.fullRow(gameBoard[i])) {
-	      GameStore.clearRow(gameBoard, i);
-	    }
+	PieceStore.fetchCurrentPiece = function () {
+	  return {
+	    piece: _piece,
+	    orientation: _orientation,
+	    currentPosition: _currentPosition
+	  };
+	};
+	
+	PieceStore.nextPiece = function () {
+	  if (PieceQueue.returnPieceQueue().length === 0) {
+	    PieceQueue.createPieceArray();
+	  }
+	  _nextPiece = PieceQueue.getPiece();
+	};
+	
+	PieceStore.newPiece = function (piece) {
+	
+	  if (piece) {
+	    _piece = piece;
+	    _currentPosition = _initialPosition;
+	    _orientation = 0;
+	  } else {
+	    _piece = _nextPiece;
+	    _currentPosition = _initialPosition;
+	    _orientation = 0;
+	  }
+	  if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
+	    debugger;
+	    GameBoard.gameOver();
+	  }
+	
+	  PieceStore.nextPiece();
+	};
+	
+	_moveLeft = function () {
+	  _newPosition = _currentPosition.slice();
+	  _newPosition[1] = _newPosition[1] - 1;
+	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
+	    _currentPosition = _newPosition;
 	  }
 	};
 	
-	GameStore.clearRow = function (gameBoard, idx) {
-	  gameBoard.splice(idx, 1);
-	  BoardStore.addGameBoardRowToTop(gameBoard);
-	  _lines += 1;
-	  _points += 10;
-	};
-	
-	GameStore.updateGameBoard = function (gameBoard) {
-	  GameStore.wipeGameBoard(gameBoard);
-	  GameStore.paintGameBoard(gameBoard);
-	  if (BoardStore.lockedPiece(piece, currentPosition, orientation)) {
-	    GameStore.lockPiece(gameBoard);
+	_moveRight = function () {
+	  _newPosition = _currentPosition.slice();
+	  _newPosition[1] = _newPosition[1] + 1;
+	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
+	    _currentPosition = _newPosition;
 	  }
-	  GameStore.clearRows(gameBoard);
-	  return { points: _points, lines: _lines };
 	};
 	
-	module.exports = GameStore;
+	_moveDown = function () {
+	  _newPosition = _currentPosition.slice();
+	  _newPosition[0] = _newPosition[0] + 1;
+	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
+	    _currentPosition = _newPosition;
+	  }
+	};
+	
+	_hardDrop = function () {
+	  _newPosition = _currentPosition;
+	  while (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
+	    _currentPosition[0] = _currentPosition[0] + 1;
+	  }
+	  _currentPosition[0] = _currentPosition[0] - 1;
+	};
+	
+	_rotate = function () {
+	  _newOrientation = _orientation;
+	  _newOrientation = (_newOrientation + 1) % 4;
+	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
+	    _orientation = _newOrientation;
+	  }
+	};
+	
+	_storePiece = function () {
+	  if (_stored) {
+	    _unstored = _stored;
+	    _stored = _piece;
+	    PieceStore.newPiece(_unstored);
+	  } else {
+	    _stored = _piece;
+	    PieceStore.newPiece();
+	  }
+	};
+	
+	PieceStore.fetchStoredPiece = function () {
+	  return _stored;
+	};
+	
+	PieceStore.fetchNextPiece = function () {
+	  return _nextPiece;
+	};
+	
+	PieceStore.nextPiece();
+	PieceStore.newPiece();
+	
+	module.exports = PieceStore;
 
 /***/ },
 /* 171 */
@@ -27389,9 +27581,107 @@
 /* 192 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var Pieces = __webpack_require__(193);
+	
+	var _pieceQueue = [];
+	
+	var pieceQueue = {
+	
+	  createPieceArray: function () {
+	    for (var i = 0; i < 2; i++) {
+	      for (var j in Pieces) {
+	        _pieceQueue.push(Pieces[j]);
+	      }
+	    }
+	    return _pieceQueue;
+	  },
+	
+	  getPiece: function () {
+	    var length = _pieceQueue.length;
+	    var random = Math.random() * length;
+	    var randomInt = Math.floor(random);
+	    return _pieceQueue[randomInt];
+	  },
+	
+	  returnPieceQueue: function () {
+	    return _pieceQueue;
+	  }
+	
+	};
+	
+	module.exports = pieceQueue;
+
+/***/ },
+/* 193 */
+/***/ function(module, exports) {
+
+	var Pieces = {
+	
+	  o: {
+	    0: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    1: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    2: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    3: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "o"
+	  },
+	
+	  i: {
+	    0: [[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    1: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+	    2: [[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    3: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
+	    "type": "i"
+	  },
+	
+	  j: {
+	    0: [[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
+	    1: [[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    2: [[1, 1, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+	    3: [[1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "j"
+	  },
+	
+	  l: {
+	    0: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
+	    1: [[1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    2: [[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+	    3: [[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "l"
+	  },
+	
+	  t: {
+	    0: [[1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    1: [[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+	    2: [[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    3: [[1, 0, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "t"
+	  },
+	  z: {
+	    0: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+	    1: [[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    2: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+	    3: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "z"
+	  },
+	  s: {
+	    0: [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+	    1: [[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    2: [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
+	    3: [[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+	    "type": "s"
+	  }
+	
+	};
+	
+	module.exports = Pieces;
+
+/***/ },
+/* 194 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var Store = __webpack_require__(171).Store;
 	var AppDispatcher = __webpack_require__(189);
-	var GameBoardConstants = __webpack_require__(169);
+	var GameBoardConstants = __webpack_require__(195);
 	
 	var BoardStore = new Store(AppDispatcher);
 	
@@ -27492,522 +27782,38 @@
 	module.exports = BoardStore;
 
 /***/ },
-/* 193 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Store = __webpack_require__(171).Store;
-	var AppDispatcher = __webpack_require__(189);
-	
-	var PieceQueue = __webpack_require__(194);
-	var BoardStore = __webpack_require__(192);
-	
-	var PieceStore = new Store(AppDispatcher);
-	
-	var _piece, _nextPiece, _initialPosition, _currentPosition, _orientation, _stored, _newPosition;
-	
-	var _initialPosition = [0, 1];
-	
-	// PieceStore.__onDispatch = function (payload) {
-	//   switch (payload.actionType) {
-	//     case "MOVE_LEFT":
-	//       _moveLeft();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "MOVE_RIGHT":
-	//       _moveRight();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "MOVE_DOWN":
-	//       _moveDown();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "HARD_DROP":
-	//       _hardDrop();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "ROTATE":
-	//       _rotate();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "STORE_PIECE":
-	//       _storePiece();
-	//       PieceStore.__emitChange();
-	//       break;
-	//     case "TOGGLE_PAUSE":
-	//       _togglePause();
-	//       PieceStore.__emitChange();
-	//       break;
-	//   }
-	// };
-	
-	_dispatchToken = PieceStore.getDispatchToken();
-	
-	PieceStore.fetchDispatchToken = function () {
-	  return _dispatchToken;
-	};
-	
-	PieceStore.__onDispatch = function (payload) {
-	  switch (payload.actionType) {
-	    case "MOVE_LEFT":
-	      _moveLeft();
-	      PieceStore.__emitChange();
-	      break;
-	    case "MOVE_RIGHT":
-	      _moveRight();
-	      PieceStore.__emitChange();
-	      break;
-	    case "MOVE_DOWN":
-	      _moveDown();
-	      PieceStore.__emitChange();
-	      break;
-	    case "HARD_DROP":
-	      _hardDrop();
-	      PieceStore.__emitChange();
-	      break;
-	    case "ROTATE":
-	      _rotate();
-	      PieceStore.__emitChange();
-	      break;
-	    case "STORE_PIECE":
-	      _storePiece();
-	      PieceStore.__emitChange();
-	      break;
-	  }
-	};
-	
-	PieceStore.fetchCurrentPiece = function () {
-	  return {
-	    piece: _piece,
-	    orientation: _orientation,
-	    currentPosition: _currentPosition
-	  };
-	};
-	
-	PieceStore.nextPiece = function () {
-	  if (PieceQueue.returnPieceQueue().length === 0) {
-	    PieceQueue.createPieceArray();
-	  }
-	  _nextPiece = PieceQueue.getPiece();
-	};
-	
-	PieceStore.newPiece = function (piece) {
-	
-	  if (piece) {
-	    _piece = piece;
-	    _currentPosition = _initialPosition;
-	    _orientation = 0;
-	  } else {
-	    _piece = _nextPiece;
-	    _currentPosition = _initialPosition;
-	    _orientation = 0;
-	  }
-	  if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
-	    console.log("Game over!");
-	  }
-	
-	  PieceStore.nextPiece();
-	};
-	
-	_moveLeft = function () {
-	  _newPosition = _currentPosition.slice();
-	  _newPosition[1] = _newPosition[1] - 1;
-	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
-	    _currentPosition = _newPosition;
-	  }
-	};
-	
-	_moveRight = function () {
-	  _newPosition = _currentPosition.slice();
-	  _newPosition[1] = _newPosition[1] + 1;
-	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
-	    _currentPosition = _newPosition;
-	  }
-	};
-	
-	_moveDown = function () {
-	  _newPosition = _currentPosition.slice();
-	  _newPosition[0] = _newPosition[0] + 1;
-	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
-	    _currentPosition = _newPosition;
-	  }
-	};
-	
-	_hardDrop = function () {
-	  _newPosition = _currentPosition;
-	  while (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
-	    _currentPosition[0] = _currentPosition[0] + 1;
-	  }
-	  _currentPosition[0] = _currentPosition[0] - 1;
-	};
-	
-	_rotate = function () {
-	  _newOrientation = _orientation;
-	  _newOrientation = (_newOrientation + 1) % 4;
-	  if (BoardStore.validPosition(_piece, _newPosition, _orientation)) {
-	    _orientation = _newOrientation;
-	  }
-	};
-	
-	_storePiece = function () {
-	  if (_stored) {
-	    _unstored = _stored;
-	    _stored = _piece;
-	    PieceStore.newPiece(_unstored);
-	  } else {
-	    _stored = _piece;
-	    PieceStore.newPiece();
-	  }
-	};
-	
-	PieceStore.fetchStoredPiece = function () {
-	  return _stored;
-	};
-	
-	PieceStore.fetchNextPiece = function () {
-	  return _nextPiece;
-	};
-	
-	PieceStore.nextPiece();
-	PieceStore.newPiece();
-	
-	module.exports = PieceStore;
-
-/***/ },
-/* 194 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Pieces = __webpack_require__(195);
-	
-	var _pieceQueue = [];
-	
-	var pieceQueue = {
-	
-	  createPieceArray: function () {
-	    for (var i = 0; i < 2; i++) {
-	      for (var j in Pieces) {
-	        _pieceQueue.push(Pieces[j]);
-	      }
-	    }
-	    return _pieceQueue;
-	  },
-	
-	  getPiece: function () {
-	    var length = _pieceQueue.length;
-	    var random = Math.random() * length;
-	    var randomInt = Math.floor(random);
-	    return _pieceQueue[randomInt];
-	  },
-	
-	  returnPieceQueue: function () {
-	    return _pieceQueue;
-	  }
-	
-	};
-	
-	module.exports = pieceQueue;
-
-/***/ },
 /* 195 */
 /***/ function(module, exports) {
 
-	var Pieces = {
+	var GameBoardConstants = {
 	
-	  o: {
-	    0: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    1: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    2: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    3: [[1, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "o"
-	  },
-	
-	  i: {
-	    0: [[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    1: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
-	    2: [[1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    3: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0]],
-	    "type": "i"
+	  moves: {
+	    MOVE_LEFT: "MOVE_LEFT",
+	    MOVE_RIGHT: "MOVE_RIGHT",
+	    MOVE_DOWN: "MOVE_DOWN",
+	    ROTATE: "ROTATE",
+	    HARD_DROP: "HARD_DROP",
+	    STORE_PIECE: "STORE_PIECE",
+	    TOGGLE_PAUSE: "TOGGLE_PAUSE"
 	  },
 	
-	  j: {
-	    0: [[0, 1, 0, 0], [0, 1, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
-	    1: [[1, 0, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    2: [[1, 1, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-	    3: [[1, 1, 1, 0], [0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "j"
-	  },
-	
-	  l: {
-	    0: [[1, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [0, 0, 0, 0]],
-	    1: [[1, 1, 1, 0], [1, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    2: [[1, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
-	    3: [[0, 0, 1, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "l"
-	  },
-	
-	  t: {
-	    0: [[1, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    1: [[0, 1, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
-	    2: [[0, 1, 0, 0], [1, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    3: [[1, 0, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "t"
-	  },
-	  z: {
-	    0: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-	    1: [[1, 1, 0, 0], [0, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    2: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-	    3: [[0, 1, 0, 0], [1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "z"
-	  },
-	  s: {
-	    0: [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
-	    1: [[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    2: [[1, 0, 0, 0], [1, 1, 0, 0], [0, 1, 0, 0], [0, 0, 0, 0]],
-	    3: [[0, 1, 1, 0], [1, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-	    "type": "s"
-	  }
+	  GAMEBOARD_HEIGHT: 20,
+	  GAMEBOARD_WIDTH: 10
 	
 	};
 	
-	module.exports = Pieces;
+	module.exports = GameBoardConstants;
 
 /***/ },
 /* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var AppDispatcher = __webpack_require__(189);
-	var ScoreBoardConstants = __webpack_require__(197);
-	
-	var ScoreBoardActions = {
-	  addPoints: function (points) {
-	    AppDispatcher.dispatch({
-	      actionType: ScoreBoardConstants.ADD_POINTS,
-	      points: points
-	    });
-	  },
-	
-	  addLines: function (lines) {
-	    AppDispatcher.dispatch({
-	      actionType: ScoreBoardConstants.ADD_LINES,
-	      lines: lines
-	    });
-	  }
-	};
-	
-	module.exports = ScoreBoardActions;
-
-/***/ },
-/* 197 */
-/***/ function(module, exports) {
-
-	var ScoreBoardConstants = {
-	  ADD_POINTS: "ADD_POINTS",
-	  ADD_LINES: "ADD_LINES"
-	};
-	
-	module.exports = ScoreBoardConstants;
-
-/***/ },
-/* 198 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var AppDispatcher = __webpack_require__(189);
-	var GameBoardConstants = __webpack_require__(169);
-	
-	var GameBoardActions = {
-	
-	  moveLeft: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.MOVE_LEFT
-	    });
-	  },
-	
-	  moveRight: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.MOVE_RIGHT
-	    });
-	  },
-	
-	  moveDown: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.MOVE_DOWN
-	    });
-	  },
-	
-	  hardDrop: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.HARD_DROP
-	    });
-	  },
-	
-	  rotate: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.ROTATE
-	    });
-	  },
-	
-	  storePiece: function () {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.STORE_PIECE
-	    });
-	  },
-	
-	  togglePause: function (paused) {
-	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.TOGGLE_PAUSE,
-	      paused: paused
-	    });
-	  }
-	
-	};
-	
-	module.exports = GameBoardActions;
-
-/***/ },
-/* 199 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Store = __webpack_require__(171).Store;
-	var AppDispatcher = __webpack_require__(189);
-	var ScoreBoardConstants = __webpack_require__(197);
-	
-	var PointsStore = new Store(AppDispatcher);
-	
-	var _points = 0,
-	    _lines = 0;
-	
-	PointsStore.__onDispatch = function (payload) {
-	  switch (payload.actionType) {
-	    case "ADD_POINTS":
-	      _addPoints(payload.points);
-	      PointsStore.__emitChange();
-	      break;
-	    case "ADD_LINES":
-	      _addLines(payload.lines);
-	      PointsStore.__emitChange();
-	      break;
-	  }
-	};
-	
-	_addPoints = function (points) {
-	  return _points + points;
-	};
-	
-	_addLines = function (lines) {
-	  return _lines + lines;
-	};
-	
-	PointsStore.fetchLines = function () {
-	  return _lines;
-	};
-	
-	PointsStore.fetchPoints = function () {
-	  return _points;
-	};
-	
-	module.exports = PointsStore;
-
-/***/ },
-/* 200 */
-/***/ function(module, exports, __webpack_require__) {
-
 	var React = __webpack_require__(1);
 	
-	var PieceStore = __webpack_require__(193);
-	var BoardStore = __webpack_require__(192);
-	
-	var StoredPiece = React.createClass({
-	  displayName: 'StoredPiece',
-	
-	
-	  getInitialState: function () {
-	    return { piece: PieceStore.fetchStoredPiece(), grid: BoardStore.createStoredPieceGrid() };
-	  },
-	
-	  componentDidMount: function () {
-	    this.listener = PieceStore.addListener(this._onChange);
-	  },
-	
-	  componentWillUnmount: function () {
-	    this.listener.remove();
-	  },
-	
-	  _onChange: function () {
-	    this.setState({ piece: PieceStore.fetchStoredPiece() });
-	  },
-	
-	  render: function () {
-	
-	    var piece = this.state.piece;
-	    var grid = this.state.grid;
-	
-	    var rows, row;
-	
-	    if (piece) {
-	      rows = piece[0].map(function (row, rowIndex) {
-	
-	        row = row.map(function (el, elIndex) {
-	          if (!el) {
-	            var className = "block";
-	          } else {
-	            var className = "block" + " " + piece.type;
-	          }
-	          return React.createElement('td', { key: elIndex, className: className });
-	        });
-	        return React.createElement(
-	          'tr',
-	          { key: rowIndex },
-	          row
-	        );
-	      });
-	    } else {
-	      rows = [0, 1, 2, 3].map(function (row, rowIndex) {
-	
-	        row = [0, 1, 2, 3].map(function (el, elIndex) {
-	
-	          return React.createElement('td', { key: elIndex, className: 'block' });
-	        });
-	        return React.createElement(
-	          'tr',
-	          { key: rowIndex },
-	          row
-	        );
-	      });
-	    }
-	
-	    return React.createElement(
-	      'div',
-	      { className: 'storedpiece' },
-	      React.createElement(
-	        'title',
-	        { className: 'storedpiece-title' },
-	        'Stored Piece'
-	      ),
-	      React.createElement(
-	        'table',
-	        { className: 'storedpiece-table' },
-	        React.createElement(
-	          'tbody',
-	          null,
-	          rows
-	        )
-	      )
-	    );
-	  }
-	
-	});
-	
-	module.exports = StoredPiece;
-
-/***/ },
-/* 201 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-	
-	var GameStore = __webpack_require__(170);
-	var BoardStore = __webpack_require__(192);
-	var PieceStore = __webpack_require__(193);
-	var PointsStore = __webpack_require__(199);
+	var GameStore = __webpack_require__(197);
+	var BoardStore = __webpack_require__(194);
+	var PieceStore = __webpack_require__(170);
+	var PointsStore = __webpack_require__(200);
 	
 	var ScoreBoard = React.createClass({
 	  displayName: 'ScoreBoard',
@@ -28058,7 +27864,185 @@
 	module.exports = ScoreBoard;
 
 /***/ },
-/* 202 */
+/* 197 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Store = __webpack_require__(171).Store;
+	var AppDispatcher = __webpack_require__(189);
+	var BoardStore = __webpack_require__(194);
+	var PieceStore = __webpack_require__(170);
+	var Pieces = __webpack_require__(193);
+	var ScoreBoardActions = __webpack_require__(198);
+	
+	var GameStore = new Store(AppDispatcher);
+	
+	var _lines = 0,
+	    _points = 0;
+	
+	GameStore.__onDispatch = function () {};
+	
+	GameStore.fetchGameBoard = function () {
+	  return BoardStore.fetchGameBoard();
+	};
+	
+	GameStore.wipeGameBoard = function (gameBoard) {
+	  gameBoard.forEach(function (row, rowIndex) {
+	    row.forEach(function (el, elIndex) {
+	      if (!!el.type && !el.locked) {
+	        el.type = "";
+	        el.empty = true;
+	      }
+	    });
+	  });
+	};
+	
+	GameStore.paintGameBoard = function (gameBoard) {
+	  currentPiece = PieceStore.fetchCurrentPiece();
+	  currentPosition = currentPiece.currentPosition;
+	  orientation = currentPiece.orientation;
+	  piece = currentPiece.piece[orientation];
+	  piece.forEach(function (row, rowIndex) {
+	    row.forEach(function (el, elIndex) {
+	      if (el && gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex]) {
+	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].type = currentPiece.piece.type;
+	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].empty = false;
+	      }
+	    });
+	  });
+	};
+	
+	GameStore.lockPiece = function (gameBoard) {
+	  currentPiece = PieceStore.fetchCurrentPiece();
+	  currentPosition = currentPiece.currentPosition;
+	  orientation = currentPiece.orientation;
+	  piece = currentPiece.piece[orientation];
+	  piece.forEach(function (row, rowIndex) {
+	    row.forEach(function (el, elIndex) {
+	      if (el && gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex]) {
+	        gameBoard[currentPosition[0] + rowIndex][currentPosition[1] + elIndex].locked = true;
+	      }
+	    });
+	  });
+	  PieceStore.newPiece();
+	};
+	
+	GameStore.fullRow = function (row) {
+	  if (row) {
+	    return row.slice(1, 11).every(function (el) {
+	      return el.locked && !!el.type;
+	    });
+	  }
+	};
+	
+	GameStore.clearRows = function (gameBoard) {
+	  for (var i = 0; i < gameBoard.length; i++) {
+	    if (GameStore.fullRow(gameBoard[i])) {
+	      GameStore.clearRow(gameBoard, i);
+	    }
+	  }
+	};
+	
+	GameStore.clearRow = function (gameBoard, idx) {
+	  gameBoard.splice(idx, 1);
+	  BoardStore.addGameBoardRowToTop(gameBoard);
+	  _lines += 1;
+	  _points += 10;
+	};
+	
+	GameStore.updateGameBoard = function (gameBoard) {
+	  GameStore.wipeGameBoard(gameBoard);
+	  GameStore.paintGameBoard(gameBoard);
+	  if (BoardStore.lockedPiece(piece, currentPosition, orientation)) {
+	    GameStore.lockPiece(gameBoard);
+	  }
+	  GameStore.clearRows(gameBoard);
+	  return { points: _points, lines: _lines };
+	};
+	
+	module.exports = GameStore;
+
+/***/ },
+/* 198 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var AppDispatcher = __webpack_require__(189);
+	var ScoreBoardConstants = __webpack_require__(199);
+	
+	var ScoreBoardActions = {
+	  addPoints: function (points) {
+	    AppDispatcher.dispatch({
+	      actionType: ScoreBoardConstants.ADD_POINTS,
+	      points: points
+	    });
+	  },
+	
+	  addLines: function (lines) {
+	    AppDispatcher.dispatch({
+	      actionType: ScoreBoardConstants.ADD_LINES,
+	      lines: lines
+	    });
+	  }
+	};
+	
+	module.exports = ScoreBoardActions;
+
+/***/ },
+/* 199 */
+/***/ function(module, exports) {
+
+	var ScoreBoardConstants = {
+	  ADD_POINTS: "ADD_POINTS",
+	  ADD_LINES: "ADD_LINES"
+	};
+	
+	module.exports = ScoreBoardConstants;
+
+/***/ },
+/* 200 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Store = __webpack_require__(171).Store;
+	var AppDispatcher = __webpack_require__(189);
+	var ScoreBoardConstants = __webpack_require__(199);
+	
+	var PointsStore = new Store(AppDispatcher);
+	
+	var _points = 0,
+	    _lines = 0;
+	
+	PointsStore.__onDispatch = function (payload) {
+	  switch (payload.actionType) {
+	    case "ADD_POINTS":
+	      _addPoints(payload.points);
+	      PointsStore.__emitChange();
+	      break;
+	    case "ADD_LINES":
+	      _addLines(payload.lines);
+	      PointsStore.__emitChange();
+	      break;
+	  }
+	};
+	
+	_addPoints = function (points) {
+	  return _points + points;
+	};
+	
+	_addLines = function (lines) {
+	  return _lines + lines;
+	};
+	
+	PointsStore.fetchLines = function () {
+	  return _lines;
+	};
+	
+	PointsStore.fetchPoints = function () {
+	  return _points;
+	};
+	
+	module.exports = PointsStore;
+
+/***/ },
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -28191,7 +28175,7 @@
 	module.exports = Instructions;
 
 /***/ },
-/* 203 */
+/* 202 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -28214,13 +28198,13 @@
 	module.exports = Title;
 
 /***/ },
-/* 204 */
+/* 203 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
 	
-	var PieceStore = __webpack_require__(193);
-	var BoardStore = __webpack_require__(192);
+	var PieceStore = __webpack_require__(170);
+	var BoardStore = __webpack_require__(194);
 	
 	var NextPiece = React.createClass({
 	  displayName: 'NextPiece',
@@ -28306,7 +28290,7 @@
 	module.exports = NextPiece;
 
 /***/ },
-/* 205 */
+/* 204 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -28353,6 +28337,108 @@
 	});
 	
 	module.exports = Footer;
+
+/***/ },
+/* 205 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var AppDispatcher = __webpack_require__(189);
+	var GameBoardConstants = __webpack_require__(195);
+	
+	var GameBoardActions = {
+	
+	  moveLeft: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.MOVE_LEFT
+	    });
+	  },
+	
+	  moveRight: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.MOVE_RIGHT
+	    });
+	  },
+	
+	  moveDown: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.MOVE_DOWN
+	    });
+	  },
+	
+	  hardDrop: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.HARD_DROP
+	    });
+	  },
+	
+	  rotate: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.ROTATE
+	    });
+	  },
+	
+	  storePiece: function () {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.STORE_PIECE
+	    });
+	  },
+	
+	  togglePause: function (paused) {
+	    AppDispatcher.dispatch({
+	      actionType: GameBoardConstants.moves.TOGGLE_PAUSE,
+	      paused: paused
+	    });
+	  }
+	
+	};
+	
+	module.exports = GameBoardActions;
+
+/***/ },
+/* 206 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var PausedModal = React.createClass({
+	  displayName: "PausedModal",
+	
+	
+	  render: function () {
+	
+	    return React.createElement(
+	      "div",
+	      { className: "paused-modal" },
+	      "Paused"
+	    );
+	  }
+	
+	});
+	
+	module.exports = PausedModal;
+
+/***/ },
+/* 207 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	
+	var GameOverModal = React.createClass({
+	  displayName: "GameOverModal",
+	
+	
+	  render: function () {
+	
+	    return React.createElement(
+	      "div",
+	      { className: "game-over-modal" },
+	      "Game Over"
+	    );
+	  }
+	
+	});
+	
+	module.exports = GameOverModal;
 
 /***/ }
 /******/ ]);

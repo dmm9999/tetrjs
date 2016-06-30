@@ -3,6 +3,7 @@ var AppDispatcher = require('./../dispatcher/dispatcher');
 
 var PieceQueue = require('./../util/piece_queue_utils');
 var BoardStore = require('./board_store');
+var GameBoard = require('./../components/gameboard');
 
 var PieceStore = new Store(AppDispatcher);
 
@@ -105,7 +106,8 @@ PieceStore.newPiece = function (piece) {
     _orientation = 0;
   }
     if (!BoardStore.validPosition(_piece, _initialPosition, _orientation)) {
-      console.log("Game over!");
+      debugger
+      GameBoard.gameOver();
   }
 
   PieceStore.nextPiece();

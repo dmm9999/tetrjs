@@ -7,11 +7,13 @@ var PieceStore = require('./../stores/piece_store');
 var BoardStore = require('./../stores/board_store');
 var PointsStore = require('./../stores/points_store');
 var PieceQueue = require('./../util/piece_queue_utils');
+var PausedModal = require('./paused_modal');
+var GameOverModal = require('./game_over_modal');
 
 var GameBoard = React.createClass({
 
   getInitialState: function () {
-    return( { currentBoardState : GameStore.fetchGameBoard(), paused : true });
+    return( { currentBoardState : GameStore.fetchGameBoard(), paused : true, gameOver : false });
   },
 
   componentDidMount: function () {
@@ -82,6 +84,10 @@ var GameBoard = React.createClass({
     }
   },
 
+  gameOver: function () {
+    this.setState( { gameOver : true } )
+  },
+
   render: function () {
 
     var rows = this.state.currentBoardState.map(function(row, i) {
@@ -105,13 +111,37 @@ var GameBoard = React.createClass({
            </tr>
     });
 
-    return (
-      <table className="gameboard">
-        <tbody>
-          {rows}
-        </tbody>
-      </table>
-    )
+    if (this.state.gameOver) {
+      return (
+        <div>
+          <table className="gameboard">
+            <tbody>
+              {rows}
+            </tbody>
+          </table>
+          <GameOverModal/>
+        </div>
+      )
+    } else if (this.state.paused) {
+      return (
+        <div>
+          <table className="gameboard">
+            <tbody>
+              {rows}
+            </tbody>
+          </table>
+          <PausedModal/>
+        </div>
+      )
+    } else {
+      return (
+        <table className="gameboard">
+          <tbody>
+            {rows}
+          </tbody>
+        </table>
+      )
+    }
   }
 
 });

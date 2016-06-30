@@ -173,6 +173,24 @@ html, body {
   color: #129AFF;
 }
 
+.paused-modal {
+  position: absolute;
+  z-index: 1;
+  top: 44%;
+  left: 45%;
+  color: red;
+  font-size: 48px;
+}
+
+.game-over-modal {
+  position: absolute;
+  z-index: 1;
+  top: 44%;
+  left: 45%;
+  color: red;
+  font-size: 48px;
+}
+
 .footer {
   list-style: none;
 }
