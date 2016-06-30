@@ -75,10 +75,6 @@ PieceStore.__onDispatch = function (payload) {
       _storePiece();
       PieceStore.__emitChange();
       break;
-    case "TOGGLE_PAUSE":
-      _togglePause();
-      PieceStore.__emitChange();
-      break;
   }
 };
 

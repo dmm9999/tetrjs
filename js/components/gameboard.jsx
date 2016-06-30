@@ -11,15 +11,14 @@ var PieceQueue = require('./../util/piece_queue_utils');
 var GameBoard = React.createClass({
 
   getInitialState: function () {
-    return( { currentBoardState : GameStore.fetchGameBoard() });
+    return( { currentBoardState : GameStore.fetchGameBoard(), paused : true });
   },
 
   componentDidMount: function () {
     this.gameStoreListener = GameStore.addListener(this._onChange);
     this.pieceStoreListener = PieceStore.addListener(this._onChange);
-    document.addEventListener("keyup", this.onKeyPress);
     PieceQueue.createPieceArray();
-    setInterval(GameBoardActions.moveDown, 1000);
+    this.togglePause(this.state.paused);
   },
 
   componentWillUnmount: function () {
@@ -31,6 +30,20 @@ var GameBoard = React.createClass({
     var gameBoard = GameStore.fetchGameBoard();
     gameBoard = GameStore.updateGameBoard(gameBoard);
     this.setState( { currentBoardState : GameStore.fetchGameBoard() } )
+  },
+
+  togglePause: function (paused) {
+    if (paused) {
+      this.falling = setInterval(GameBoardActions.moveDown, 1000);
+      document.removeEventListener("keyup", this.onPause);
+      this.keyListener = document.addEventListener("keyup", this.onKeyPress);
+      this.setState( { paused : false } );
+    } else {
+      clearInterval(this.falling);
+      document.removeEventListener("keyup", this.onKeyPress);
+      this.pauseListener = document.addEventListener("keyup", this.onPause);
+      this.setState( { paused : true } )
+    }
   },
 
   onKeyPress: function (e) {
@@ -55,8 +68,17 @@ var GameBoard = React.createClass({
         GameBoardActions.storePiece();
         break;
       case "KeyP":
-        GameBoardActions.togglePause();
+        this.togglePause(this.state.paused);
         break;
+    }
+  },
+
+  onPause: function (e) {
+    e.preventDefault();
+    switch(e.code) {
+    case "KeyP":
+      this.togglePause(this.state.paused);
+      break;
     }
   },
 

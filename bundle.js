@@ -48,8 +48,8 @@
 	var ReactDOM = __webpack_require__(38);
 	
 	var GameBoard = __webpack_require__(168);
-	var StoredPiece = __webpack_require__(199);
-	var ScoreBoard = __webpack_require__(200);
+	var StoredPiece = __webpack_require__(200);
+	var ScoreBoard = __webpack_require__(201);
 	var Instructions = __webpack_require__(202);
 	var Title = __webpack_require__(203);
 	var NextPiece = __webpack_require__(204);
@@ -20386,7 +20386,7 @@
 	var GameBoardActions = __webpack_require__(198);
 	var PieceStore = __webpack_require__(193);
 	var BoardStore = __webpack_require__(192);
-	var PointsStore = __webpack_require__(201);
+	var PointsStore = __webpack_require__(199);
 	var PieceQueue = __webpack_require__(194);
 	
 	var GameBoard = React.createClass({
@@ -20394,15 +20394,14 @@
 	
 	
 	  getInitialState: function () {
-	    return { currentBoardState: GameStore.fetchGameBoard() };
+	    return { currentBoardState: GameStore.fetchGameBoard(), paused: true };
 	  },
 	
 	  componentDidMount: function () {
 	    this.gameStoreListener = GameStore.addListener(this._onChange);
 	    this.pieceStoreListener = PieceStore.addListener(this._onChange);
-	    document.addEventListener("keyup", this.onKeyPress);
 	    PieceQueue.createPieceArray();
-	    setInterval(GameBoardActions.moveDown, 1000);
+	    this.togglePause(this.state.paused);
 	  },
 	
 	  componentWillUnmount: function () {
@@ -20414,6 +20413,20 @@
 	    var gameBoard = GameStore.fetchGameBoard();
 	    gameBoard = GameStore.updateGameBoard(gameBoard);
 	    this.setState({ currentBoardState: GameStore.fetchGameBoard() });
+	  },
+	
+	  togglePause: function (paused) {
+	    if (paused) {
+	      this.falling = setInterval(GameBoardActions.moveDown, 1000);
+	      document.removeEventListener("keyup", this.onPause);
+	      this.keyListener = document.addEventListener("keyup", this.onKeyPress);
+	      this.setState({ paused: false });
+	    } else {
+	      clearInterval(this.falling);
+	      document.removeEventListener("keyup", this.onKeyPress);
+	      this.pauseListener = document.addEventListener("keyup", this.onPause);
+	      this.setState({ paused: true });
+	    }
 	  },
 	
 	  onKeyPress: function (e) {
@@ -20438,7 +20451,16 @@
 	        GameBoardActions.storePiece();
 	        break;
 	      case "KeyP":
-	        GameBoardActions.togglePause();
+	        this.togglePause(this.state.paused);
+	        break;
+	    }
+	  },
+	
+	  onPause: function (e) {
+	    e.preventDefault();
+	    switch (e.code) {
+	      case "KeyP":
+	        this.togglePause(this.state.paused);
 	        break;
 	    }
 	  },
@@ -27550,10 +27572,6 @@
 	      _storePiece();
 	      PieceStore.__emitChange();
 	      break;
-	    case "TOGGLE_PAUSE":
-	      _togglePause();
-	      PieceStore.__emitChange();
-	      break;
 	  }
 	};
 	
@@ -27833,9 +27851,10 @@
 	    });
 	  },
 	
-	  togglePause: function () {
+	  togglePause: function (paused) {
 	    AppDispatcher.dispatch({
-	      actionType: GameBoardConstants.moves.TOGGLE_PAUSE
+	      actionType: GameBoardConstants.moves.TOGGLE_PAUSE,
+	      paused: paused
 	    });
 	  }
 	
@@ -27845,6 +27864,50 @@
 
 /***/ },
 /* 199 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Store = __webpack_require__(171).Store;
+	var AppDispatcher = __webpack_require__(189);
+	var ScoreBoardConstants = __webpack_require__(197);
+	
+	var PointsStore = new Store(AppDispatcher);
+	
+	var _points = 0,
+	    _lines = 0;
+	
+	PointsStore.__onDispatch = function (payload) {
+	  switch (payload.actionType) {
+	    case "ADD_POINTS":
+	      _addPoints(payload.points);
+	      PointsStore.__emitChange();
+	      break;
+	    case "ADD_LINES":
+	      _addLines(payload.lines);
+	      PointsStore.__emitChange();
+	      break;
+	  }
+	};
+	
+	_addPoints = function (points) {
+	  return _points + points;
+	};
+	
+	_addLines = function (lines) {
+	  return _lines + lines;
+	};
+	
+	PointsStore.fetchLines = function () {
+	  return _lines;
+	};
+	
+	PointsStore.fetchPoints = function () {
+	  return _points;
+	};
+	
+	module.exports = PointsStore;
+
+/***/ },
+/* 200 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -27936,7 +27999,7 @@
 	module.exports = StoredPiece;
 
 /***/ },
-/* 200 */
+/* 201 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
@@ -27944,7 +28007,7 @@
 	var GameStore = __webpack_require__(170);
 	var BoardStore = __webpack_require__(192);
 	var PieceStore = __webpack_require__(193);
-	var PointsStore = __webpack_require__(201);
+	var PointsStore = __webpack_require__(199);
 	
 	var ScoreBoard = React.createClass({
 	  displayName: 'ScoreBoard',
@@ -27993,50 +28056,6 @@
 	});
 	
 	module.exports = ScoreBoard;
-
-/***/ },
-/* 201 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Store = __webpack_require__(171).Store;
-	var AppDispatcher = __webpack_require__(189);
-	var ScoreBoardConstants = __webpack_require__(197);
-	
-	var PointsStore = new Store(AppDispatcher);
-	
-	var _points = 0,
-	    _lines = 0;
-	
-	PointsStore.__onDispatch = function (payload) {
-	  switch (payload.actionType) {
-	    case "ADD_POINTS":
-	      _addPoints(payload.points);
-	      PointsStore.__emitChange();
-	      break;
-	    case "ADD_LINES":
-	      _addLines(payload.lines);
-	      PointsStore.__emitChange();
-	      break;
-	  }
-	};
-	
-	_addPoints = function (points) {
-	  return _points + points;
-	};
-	
-	_addLines = function (lines) {
-	  return _lines + lines;
-	};
-	
-	PointsStore.fetchLines = function () {
-	  return _lines;
-	};
-	
-	PointsStore.fetchPoints = function () {
-	  return _points;
-	};
-	
-	module.exports = PointsStore;
 
 /***/ },
 /* 202 */

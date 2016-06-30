@@ -39,9 +39,10 @@ var GameBoardActions = {
     });
   },
 
-  togglePause: function () {
+  togglePause: function (paused) {
     AppDispatcher.dispatch({
-      actionType: GameBoardConstants.moves.TOGGLE_PAUSE
+      actionType: GameBoardConstants.moves.TOGGLE_PAUSE,
+      paused : paused
     });
   },
 
